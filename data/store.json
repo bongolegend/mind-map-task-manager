@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "root": {
+      "id": "root",
+      "type": "root",
+      "title": "Workspace"
+    },
+    "person_alex": {
+      "id": "person_alex",
+      "type": "person",
+      "title": "Alex Chen",
+      "role": "analyst",
+      "firm": "Acme Cap",
+      "notes": "Met via conference intro. Sharp on inference economics."
+    },
+    "person_jordan": {
+      "id": "person_jordan",
+      "type": "person",
+      "title": "Jordan Lee",
+      "role": "PM",
+      "firm": "CloudForge",
+      "notes": "Product side — good on customer demand signals."
+    },
+    "ix_call": {
+      "id": "ix_call",
+      "type": "interaction",
+      "title": "Call — Jul 12",
+      "date": "2026-07-12",
+      "notes": "Walked through their inference utilization model."
+    },
+    "ix_intro": {
+      "id": "ix_intro",
+      "type": "interaction",
+      "title": "Intro at conference",
+      "date": "2026-06-03",
+      "notes": "Quick hallway chat after the panel."
+    },
+    "ix_email": {
+      "id": "ix_email",
+      "type": "interaction",
+      "title": "Follow-up email",
+      "date": "2026-07-14",
+      "notes": "Sent memo outline; waiting on feedback."
+    },
+    "ix_jordan_slack": {
+      "id": "ix_jordan_slack",
+      "type": "interaction",
+      "title": "Slack thread on latency",
+      "date": "2026-07-08"
+    },
+    "thesis_aff585f0": {
+      "id": "thesis_aff585f0",
+      "type": "thesis",
+      "title": "being more social will make me happier",
+      "notes": "- workout less\n- spend no time watching movies or browsing\n- talk to people on the subway"
+    },
+    "bet_f4596087": {
+      "id": "bet_f4596087",
+      "type": "bet",
+      "title": "take every social opportunity and meet strangers"
+    }
+  },
+  "children": {
+    "root": [
+      "thesis_aff585f0"
+    ],
+    "person_alex": [
+      "ix_call",
+      "ix_intro",
+      "ix_email"
+    ],
+    "person_jordan": [
+      "ix_jordan_slack"
+    ],
+    "ix_call": [],
+    "ix_intro": [],
+    "ix_email": [],
+    "ix_jordan_slack": [],
+    "thesis_aff585f0": [
+      "bet_f4596087"
+    ],
+    "bet_f4596087": []
+  },
+  "betPeople": {}
+}
