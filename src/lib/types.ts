@@ -12,6 +12,8 @@ export type Entity = {
   title: string;
   /** Freeform notes / body text */
   notes?: string;
+  /** Due date (YYYY-MM-DD) — available on all entity types */
+  dueDate?: string;
   /** Person metadata */
   role?: string;
   firm?: string;

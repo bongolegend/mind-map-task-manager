@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import { InlineEditable } from "./InlineEditable";
 import {
   creatableChildTypes,
@@ -58,6 +65,9 @@ export function DrillDown({ store, onStoreChange }: Props) {
   /** Navigation stack: [root, ..., focus]. Last id is current focus. */
   const [path, setPath] = useState<string[]>([ROOT_ID]);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Set<EntityType>>(
+    () => new Set(),
+  );
   const [busy, setBusy] = useState(false);
 
   const focusId = path[path.length - 1] ?? ROOT_ID;
@@ -71,7 +81,29 @@ export function DrillDown({ store, onStoreChange }: Props) {
   );
   const groups = useMemo(() => groupByType(children), [children]);
 
+  async function refreshStore(): Promise<Store | null> {
+    try {
+      const res = await fetch("/api/store");
+      if (!res.ok) return null;
+      const data = (await res.json()) as Store;
+      onStoreChange(data);
+      // Drop path entries that no longer exist
+      setPath((p) => {
+        const valid = p.filter((id) => data.entities[id]);
+        return valid.length > 0 ? valid : [ROOT_ID];
+      });
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
   async function patchEntity(id: string, patch: Record<string, string | undefined>) {
+    // Skip if we already know it's gone (avoids noisy 404s after delete/rename races)
+    if (!store.entities[id]) {
+      await refreshStore();
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch("/api/store", {
@@ -80,8 +112,14 @@ export function DrillDown({ store, onStoreChange }: Props) {
         body: JSON.stringify({ id, patch }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+      if (!res.ok) {
+        // Stale client state (e.g. entity deleted, or store reset under us)
+        await refreshStore();
+        return;
+      }
       onStoreChange(data.store);
+    } catch {
+      await refreshStore();
     } finally {
       setBusy(false);
     }
@@ -96,8 +134,13 @@ export function DrillDown({ store, onStoreChange }: Props) {
         body: JSON.stringify({ parentId: focusId, type }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+      if (!res.ok) {
+        await refreshStore();
+        return;
+      }
       onStoreChange(data.store);
+    } catch {
+      await refreshStore();
     } finally {
       setBusy(false);
     }
@@ -120,7 +163,10 @@ export function DrillDown({ store, onStoreChange }: Props) {
         body: JSON.stringify({ id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+      if (!res.ok) {
+        await refreshStore();
+        return;
+      }
       onStoreChange(data.store);
       // If we deleted the focus (or something above us), step back
       setPath((p) => {
@@ -130,6 +176,9 @@ export function DrillDown({ store, onStoreChange }: Props) {
         return next.length > 0 ? next : [ROOT_ID];
       });
       setDetailsOpen(false);
+      setCollapsedSections(new Set());
+    } catch {
+      await refreshStore();
     } finally {
       setBusy(false);
     }
@@ -138,12 +187,23 @@ export function DrillDown({ store, onStoreChange }: Props) {
   function drillInto(id: string) {
     setPath((p) => [...p, id]);
     setDetailsOpen(false);
+    setCollapsedSections(new Set());
   }
 
   function goUp() {
     if (path.length <= 1) return;
     setPath((p) => p.slice(0, -1));
     setDetailsOpen(false);
+    setCollapsedSections(new Set());
+  }
+
+  function toggleSection(type: EntityType) {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
   }
 
   if (!focus) {
@@ -209,6 +269,18 @@ export function DrillDown({ store, onStoreChange }: Props) {
       {/* Metadata — expanded via focus title click */}
       {showDetails && detailsOpen && (
         <div className="mb-4 mt-1 space-y-3 border-l-2 border-[var(--rule)] pl-3">
+          <MetaRow label="Due" layout="inline">
+            <input
+              type="date"
+              value={focus.dueDate ?? ""}
+              onChange={(e) =>
+                patchEntity(focus.id, {
+                  dueDate: e.target.value,
+                })
+              }
+              className="bg-transparent text-sm outline-none border-b border-transparent focus:border-[var(--accent)] text-[var(--foreground)]"
+            />
+          </MetaRow>
           {focus.type === "person" && (
             <>
               <MetaRow label="Role" layout="inline">
@@ -246,11 +318,15 @@ export function DrillDown({ store, onStoreChange }: Props) {
           )}
           {focus.type === "interaction" && (
             <MetaRow label="Date" layout="inline">
-              <InlineEditable
+              <input
+                type="date"
                 value={focus.date ?? ""}
-                as="meta"
-                placeholder="YYYY-MM-DD"
-                onSave={(date) => patchEntity(focus.id, { date })}
+                onChange={(e) =>
+                  patchEntity(focus.id, {
+                    date: e.target.value,
+                  })
+                }
+                className="bg-transparent text-sm outline-none border-b border-transparent focus:border-[var(--accent)] text-[var(--foreground)]"
               />
             </MetaRow>
           )}
@@ -275,56 +351,67 @@ export function DrillDown({ store, onStoreChange }: Props) {
 
       <div className="my-2 border-t border-[var(--rule)]" />
 
-      {/* Children — always titled by type */}
+      {/* Children — always titled by type; sections collapse */}
       <div className="mt-4 flex flex-col gap-1">
-        {listGroups.map((group) => (
-          <div key={group.type} className="mb-4">
-            <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--muted)]">
-              {sectionLabelFor(group.type)}
-            </h2>
-            {group.items.length === 0 ? (
-              <p className="px-2 py-2 text-sm text-[var(--muted)]">
-                Nothing here yet.
-              </p>
-            ) : (
-              <ul className="flex flex-col">
-                {group.items.map((item) => {
-                  const count = childCount(store, item.id);
-                  return (
-                    <li key={item.id} className="group flex items-stretch">
-                      <button
-                        type="button"
-                        onClick={() => drillInto(item.id)}
-                        className="flex min-w-0 flex-1 items-start justify-between gap-3 rounded-md px-2 py-2.5 text-left hover:bg-[var(--hover)] transition-colors"
-                      >
-                        <span className="min-w-0 flex-1 text-base leading-snug">
-                          {item.title}
-                        </span>
-                        {count > 0 && (
-                          <span className="shrink-0 rounded-full bg-[var(--badge)] px-2 py-0.5 text-xs tabular-nums text-[var(--muted)]">
-                            {count}
-                          </span>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        title={`Delete ${TYPE_LABELS[item.type].toLowerCase()}`}
-                        aria-label={`Delete ${item.title}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeEntity(item.id);
-                        }}
-                        className="shrink-0 self-center rounded-md px-2 py-1 text-sm text-[var(--faint)] hover:bg-[var(--hover)] hover:text-red-700 transition-colors"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        ))}
+        {listGroups.map((group) => {
+          const open = !collapsedSections.has(group.type);
+          return (
+            <div key={group.type} className="mb-4">
+              <button
+                type="button"
+                onClick={() => toggleSection(group.type)}
+                aria-expanded={open}
+                className="mb-2 flex w-full items-center gap-1.5 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                <span>{sectionLabelFor(group.type)}</span>
+                <span aria-hidden="true" className="font-normal">
+                  {open ? "▾" : "▸"}
+                </span>
+                {!open && group.items.length > 0 && (
+                  <span className="font-normal normal-case tracking-normal text-[var(--faint)]">
+                    ({group.items.length})
+                  </span>
+                )}
+              </button>
+              {open &&
+                (group.items.length === 0 ? (
+                  <p className="px-2 py-2 text-sm text-[var(--muted)]">
+                    Nothing here yet.
+                  </p>
+                ) : (
+                  <ul className="flex flex-col">
+                    {group.items.map((item) => {
+                      const count = childCount(store, item.id);
+                      return (
+                        <li key={item.id} className="group flex items-stretch">
+                          <ListRow
+                            title={item.title}
+                            childCount={count}
+                            onOpen={() => drillInto(item.id)}
+                            onRename={(title) =>
+                              patchEntity(item.id, { title })
+                            }
+                          />
+                          <button
+                            type="button"
+                            title={`Delete ${TYPE_LABELS[item.type].toLowerCase()}`}
+                            aria-label={`Delete ${item.title}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeEntity(item.id);
+                            }}
+                            className="shrink-0 self-center rounded-md px-2 py-1 text-sm text-[var(--faint)] hover:bg-[var(--hover)] hover:text-red-700 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ))}
+            </div>
+          );
+        })}
       </div>
 
       {/* Add children */}
@@ -343,6 +430,110 @@ export function DrillDown({ store, onStoreChange }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+/** List row: single-click drills in, double-click renames in place. */
+function ListRow({
+  title,
+  childCount,
+  onOpen,
+  onRename,
+}: {
+  title: string;
+  childCount: number;
+  onOpen: () => void;
+  onRename: (next: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setDraft(title);
+  }, [title]);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  useEffect(() => {
+    return () => {
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+    };
+  }, []);
+
+  function commit() {
+    const next = draft.trim() || "Untitled";
+    setEditing(false);
+    if (next !== title) onRename(next);
+    else setDraft(title);
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commit();
+    }
+    if (e.key === "Escape") {
+      setDraft(title);
+      setEditing(false);
+    }
+  }
+
+  function handleClick() {
+    if (editing) return;
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    clickTimer.current = setTimeout(() => {
+      clickTimer.current = null;
+      onOpen();
+    }, 250);
+  }
+
+  function handleDoubleClick(e: MouseEvent) {
+    e.preventDefault();
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    setEditing(true);
+  }
+
+  if (editing) {
+    return (
+      <div className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5">
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={onKeyDown}
+          onClick={(e) => e.stopPropagation()}
+          className="min-w-0 flex-1 bg-transparent text-base leading-snug outline-none border-b border-[var(--accent)]"
+          placeholder="Untitled"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      className="flex min-w-0 flex-1 items-start justify-between gap-3 rounded-md px-2 py-2.5 text-left hover:bg-[var(--hover)] transition-colors"
+    >
+      <span className="min-w-0 flex-1 text-base leading-snug">{title}</span>
+      {childCount > 0 && (
+        <span className="shrink-0 rounded-full bg-[var(--badge)] px-2 py-0.5 text-xs tabular-nums text-[var(--muted)]">
+          {childCount}
+        </span>
+      )}
+    </button>
   );
 }
 
