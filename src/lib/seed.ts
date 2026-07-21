@@ -1,0 +1,166 @@
+import type { Store } from "./types";
+import { ROOT_ID } from "./types";
+
+/** Seed matching the plan mockups — written on first boot if store.json is missing. */
+export function createSeedStore(): Store {
+  return {
+    entities: {
+      [ROOT_ID]: {
+        id: ROOT_ID,
+        type: "root",
+        title: "Workspace",
+      },
+      thesis_ai: {
+        id: "thesis_ai",
+        type: "thesis",
+        title: "AI infra commoditizes",
+        notes: "Inference and training hardware become interchangeable commodities over time.",
+      },
+      thesis_housing: {
+        id: "thesis_housing",
+        type: "thesis",
+        title: "Housing supply thesis",
+        notes: "Zoning reform and modular construction unlock supply.",
+      },
+      thesis_austin: {
+        id: "thesis_austin",
+        type: "thesis",
+        title: "Move to Austin",
+        notes: "Personal life bet — not an investment thesis.",
+      },
+      bet_inference: {
+        id: "bet_inference",
+        type: "bet",
+        title: "Long inference pure-plays",
+        notes: "Companies that win on serving models, not training them.",
+      },
+      bet_training: {
+        id: "bet_training",
+        type: "bet",
+        title: "Short training-only hardware",
+        notes: "Training-specific silicon loses pricing power first.",
+      },
+      bet_zoning: {
+        id: "bet_zoning",
+        type: "bet",
+        title: "Track upzoning bills",
+        notes: "State-level preemption of local zoning.",
+      },
+      bet_lease: {
+        id: "bet_lease",
+        type: "bet",
+        title: "Find a 12-month lease",
+      },
+      bet_network: {
+        id: "bet_network",
+        type: "bet",
+        title: "Rebuild local network",
+      },
+      bet_schools: {
+        id: "bet_schools",
+        type: "bet",
+        title: "School district research",
+      },
+      task_earnings: {
+        id: "task_earnings",
+        type: "task",
+        title: "Read earnings calls",
+        status: "todo",
+      },
+      task_comp: {
+        id: "task_comp",
+        type: "task",
+        title: "Build comp sheet",
+        status: "doing",
+      },
+      task_memo: {
+        id: "task_memo",
+        type: "task",
+        title: "Draft memo",
+        status: "todo",
+      },
+      task_gpu: {
+        id: "task_gpu",
+        type: "task",
+        title: "Map GPU ASP trends",
+        status: "todo",
+      },
+      task_shortlist: {
+        id: "task_shortlist",
+        type: "task",
+        title: "Shortlist names to short",
+        status: "todo",
+      },
+      person_alex: {
+        id: "person_alex",
+        type: "person",
+        title: "Alex Chen",
+        role: "analyst",
+        firm: "Acme Cap",
+        notes: "Met via conference intro. Sharp on inference economics.",
+      },
+      person_jordan: {
+        id: "person_jordan",
+        type: "person",
+        title: "Jordan Lee",
+        role: "PM",
+        firm: "CloudForge",
+        notes: "Product side — good on customer demand signals.",
+      },
+      ix_call: {
+        id: "ix_call",
+        type: "interaction",
+        title: "Call — Jul 12",
+        date: "2026-07-12",
+        notes: "Walked through their inference utilization model.",
+      },
+      ix_intro: {
+        id: "ix_intro",
+        type: "interaction",
+        title: "Intro at conference",
+        date: "2026-06-03",
+        notes: "Quick hallway chat after the panel.",
+      },
+      ix_email: {
+        id: "ix_email",
+        type: "interaction",
+        title: "Follow-up email",
+        date: "2026-07-14",
+        notes: "Sent memo outline; waiting on feedback.",
+      },
+      ix_jordan_slack: {
+        id: "ix_jordan_slack",
+        type: "interaction",
+        title: "Slack thread on latency",
+        date: "2026-07-08",
+      },
+    },
+    children: {
+      [ROOT_ID]: ["thesis_ai", "thesis_housing", "thesis_austin"],
+      thesis_ai: ["bet_inference", "bet_training"],
+      thesis_housing: ["bet_zoning"],
+      thesis_austin: ["bet_lease", "bet_network", "bet_schools"],
+      bet_inference: ["task_earnings", "task_comp", "task_memo"],
+      bet_training: ["task_gpu", "task_shortlist"],
+      bet_zoning: [],
+      bet_lease: [],
+      bet_network: [],
+      bet_schools: [],
+      person_alex: ["ix_call", "ix_intro", "ix_email"],
+      person_jordan: ["ix_jordan_slack"],
+      task_earnings: [],
+      task_comp: [],
+      task_memo: [],
+      task_gpu: [],
+      task_shortlist: [],
+      ix_call: [],
+      ix_intro: [],
+      ix_email: [],
+      ix_jordan_slack: [],
+    },
+    betPeople: {
+      bet_inference: ["person_alex", "person_jordan"],
+      bet_training: ["person_alex"],
+    },
+  };
+}

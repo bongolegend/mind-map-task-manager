@@ -1,0 +1,28 @@
+---
+description: GitHub hygiene — feature branches and PRs, never commit straight to main
+alwaysApply: true
+---
+
+# Git hygiene
+
+## Branching
+
+- **Never commit directly to `main`.** All work happens on a feature branch.
+- Before starting implementation, create and switch to a branch:
+  - `feature/<short-description>` for new work
+  - `fix/<short-description>` for bug fixes
+- If you are already on `main` with local changes, create the feature branch immediately (`git checkout -b …`) before committing.
+- Keep branches focused: one feature or fix per branch / PR.
+
+## Pull requests
+
+- Open a PR into `main` when the work is ready for review (do not merge your own PR unless the user asks).
+- PR title: concise, imperative, focused on why.
+- PR body: short summary + test plan checklist.
+- Do not push `--force` to `main` / `master`.
+
+## Commits
+
+- Commit on the feature branch only.
+- Only commit when the user asks (existing user preference still applies).
+- Never skip hooks (`--no-verify`) unless the user explicitly requests it.
