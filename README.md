@@ -22,4 +22,4 @@ Edits persist to `data/store.json`. If that file is missing, a seed dataset is w
 
 - Do not commit to `main` directly.
 - Use a `feature/…` or `fix/…` branch, then open a PR into `main`.
-- Project rule: `.cursor/rules/git-hygiene.mdc` (always applied for agents in this repo).
+- Project rule: `.cursor/rules/git-hygiene.mdc` (smart-apply when git/PR work comes up).

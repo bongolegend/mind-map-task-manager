@@ -1,6 +1,8 @@
 ---
-description: GitHub hygiene — feature branches and PRs, never commit straight to main
-alwaysApply: true
+description: >-
+  Use when committing, branching, pushing, opening/merging PRs, or any GitHub
+  workflow — feature branches and PRs into main, never commit straight to main
+alwaysApply: false
 ---
 
 # Git hygiene
