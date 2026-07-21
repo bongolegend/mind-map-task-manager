@@ -42,10 +42,24 @@ export async function updateEntity(
   const store = await readStore();
   const entity = store.entities[id];
   if (!entity) throw new Error(`Entity not found: ${id}`);
-  if (entity.type === "root" && patch.title !== undefined) {
-    // root stays structural; allow title tweak for workspace label
-  }
+
   const updated: Entity = { ...entity, ...patch, id: entity.id, type: entity.type };
+
+  // Empty strings clear optional scalar fields (date inputs send "" when cleared)
+  const clearable = new Set([
+    "dueDate",
+    "date",
+    "notes",
+    "role",
+    "firm",
+    "status",
+  ]);
+  for (const [key, value] of Object.entries(patch)) {
+    if (clearable.has(key) && (value === "" || value === undefined)) {
+      delete updated[key as keyof Entity];
+    }
+  }
+
   store.entities[id] = updated;
   await writeStore(store);
   return updated;

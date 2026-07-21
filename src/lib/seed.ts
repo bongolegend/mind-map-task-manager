@@ -78,6 +78,7 @@ export function createSeedStore(): Store {
         type: "task",
         title: "Draft memo",
         status: "todo",
+        dueDate: "2026-07-28",
       },
       task_gpu: {
         id: "task_gpu",

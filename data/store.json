@@ -5,6 +5,88 @@
       "type": "root",
       "title": "Workspace"
     },
+    "thesis_ai": {
+      "id": "thesis_ai",
+      "type": "thesis",
+      "title": "AI infra commoditizes",
+      "notes": "Inference and training hardware become interchangeable commodities over time."
+    },
+    "thesis_housing": {
+      "id": "thesis_housing",
+      "type": "thesis",
+      "title": "Housing supply thesis",
+      "notes": "Zoning reform and modular construction unlock supply."
+    },
+    "thesis_austin": {
+      "id": "thesis_austin",
+      "type": "thesis",
+      "title": "Move to Austin",
+      "notes": "Personal life bet — not an investment thesis."
+    },
+    "bet_inference": {
+      "id": "bet_inference",
+      "type": "bet",
+      "title": "Long inference pure-plays",
+      "notes": "Companies that win on serving models, not training them."
+    },
+    "bet_training": {
+      "id": "bet_training",
+      "type": "bet",
+      "title": "Short training-only hardware",
+      "notes": "Training-specific silicon loses pricing power first."
+    },
+    "bet_zoning": {
+      "id": "bet_zoning",
+      "type": "bet",
+      "title": "Track upzoning bills",
+      "notes": "State-level preemption of local zoning."
+    },
+    "bet_lease": {
+      "id": "bet_lease",
+      "type": "bet",
+      "title": "Find a 12-month lease"
+    },
+    "bet_network": {
+      "id": "bet_network",
+      "type": "bet",
+      "title": "Rebuild local network"
+    },
+    "bet_schools": {
+      "id": "bet_schools",
+      "type": "bet",
+      "title": "School district research"
+    },
+    "task_earnings": {
+      "id": "task_earnings",
+      "type": "task",
+      "title": "Read earnings calls",
+      "status": "todo"
+    },
+    "task_comp": {
+      "id": "task_comp",
+      "type": "task",
+      "title": "Build comp sheet",
+      "status": "doing"
+    },
+    "task_memo": {
+      "id": "task_memo",
+      "type": "task",
+      "title": "Draft memo",
+      "status": "todo",
+      "dueDate": "2026-07-28"
+    },
+    "task_gpu": {
+      "id": "task_gpu",
+      "type": "task",
+      "title": "Map GPU ASP trends",
+      "status": "todo"
+    },
+    "task_shortlist": {
+      "id": "task_shortlist",
+      "type": "task",
+      "title": "Shortlist names to short",
+      "status": "todo"
+    },
     "person_alex": {
       "id": "person_alex",
       "type": "person",
@@ -47,23 +129,39 @@
       "type": "interaction",
       "title": "Slack thread on latency",
       "date": "2026-07-08"
-    },
-    "thesis_aff585f0": {
-      "id": "thesis_aff585f0",
-      "type": "thesis",
-      "title": "being more social will make me happier",
-      "notes": "- workout less\n- spend no time watching movies or browsing\n- talk to people on the subway"
-    },
-    "bet_f4596087": {
-      "id": "bet_f4596087",
-      "type": "bet",
-      "title": "take every social opportunity and meet strangers"
     }
   },
   "children": {
     "root": [
-      "thesis_aff585f0"
+      "thesis_ai",
+      "thesis_housing",
+      "thesis_austin"
     ],
+    "thesis_ai": [
+      "bet_inference",
+      "bet_training"
+    ],
+    "thesis_housing": [
+      "bet_zoning"
+    ],
+    "thesis_austin": [
+      "bet_lease",
+      "bet_network",
+      "bet_schools"
+    ],
+    "bet_inference": [
+      "task_earnings",
+      "task_comp",
+      "task_memo"
+    ],
+    "bet_training": [
+      "task_gpu",
+      "task_shortlist"
+    ],
+    "bet_zoning": [],
+    "bet_lease": [],
+    "bet_network": [],
+    "bet_schools": [],
     "person_alex": [
       "ix_call",
       "ix_intro",
@@ -72,14 +170,23 @@
     "person_jordan": [
       "ix_jordan_slack"
     ],
+    "task_earnings": [],
+    "task_comp": [],
+    "task_memo": [],
+    "task_gpu": [],
+    "task_shortlist": [],
     "ix_call": [],
     "ix_intro": [],
     "ix_email": [],
-    "ix_jordan_slack": [],
-    "thesis_aff585f0": [
-      "bet_f4596087"
-    ],
-    "bet_f4596087": []
+    "ix_jordan_slack": []
   },
-  "betPeople": {}
+  "betPeople": {
+    "bet_inference": [
+      "person_alex",
+      "person_jordan"
+    ],
+    "bet_training": [
+      "person_alex"
+    ]
+  }
 }
